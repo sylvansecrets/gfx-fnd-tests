@@ -1,0 +1,138 @@
+#!/usr/bin/env python2
+
+from __future__ import print_function
+import glob
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+possible_errors = {
+    'USAGE': "Usage: " + __file__ + " <your_program> <task_number> ( <test_numbers>... )",
+    'HEY': "HEY",
+    'HO': "HO",
+}
+
+found_errors = []
+
+def display_results(task, results):
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    header = task  # TODO: get the first line from ./task/goal.txt, and glue it in here
+    print(" " + header)
+    for result in results:
+        tester_fn, task, test, retval, bonus = result
+        test_display_name = task + "/" + test
+        if retval is None:
+            print("   " + test_display_name + ": " + RED + "error: " + ENDC + bonus)
+        elif retval == 0:
+            print("   " + test_display_name + ": " + GREEN + "pass" + ENDC)
+        else:
+            print("   " + test_display_name + ": " + RED + "fail" + ENDC)
+    print()
+
+def pick_test_helper_file(root, task, test, filename, perms):
+    answer = None
+    general = os.path.join(root, filename)
+    if os.access(general, perms):
+        answer = general
+    taskwise = os.path.join(root, task, filename)
+    if os.access(taskwise, perms):
+        answer = taskwise
+    testwise = os.path.join(root, task, test, filename)
+    if os.access(testwise, perms):
+        answer = testwise
+    return answer
+
+def run_test(prog, task, test):
+    # TODO: capture STDOUT/STDERR from tester, and pass along somehow
+    tester_fn = pick_test_helper_file(".", task, test, "_tester", os.R_OK | os.X_OK)
+    testargs_fn = pick_test_helper_file(".", task, test, "_args", os.R_OK)
+    problems = []
+    if tester_fn is None: problems.append("No valid tester found.")
+    if testargs_fn is None: problems.append("No valid arguments-configuration found.")
+    if len(problems) > 0:
+        return (tester_fn, task, test, None, " ".join(problems))
+    else:
+        with open(testargs_fn) as argsfile:
+            argsline = argsfile.readline().strip()
+        retval = subprocess.call([tester_fn, prog, os.path.join(".", task, test), argsline])
+        return (tester_fn, task, test, retval, "")
+
+def run_tests(prog, task, tests):
+    results = []
+    for test in tests:
+        result = run_test(prog, task, test)
+        results.append(result)
+    display_results(task, results)
+
+def find_tests_in_dir(test_dir):
+    files_in_dir = os.listdir(test_dir)
+    dirs_in_dir = [f for f in files_in_dir 
+                    if os.path.isdir(os.path.join(test_dir, f)) 
+                        and re.match("\d+_", f)
+                        and os.access(os.path.join(test_dir, f), os.R_OK | os.X_OK)
+                    ]
+    dirs_in_dir.sort()
+    return dirs_in_dir
+
+def choose_task_and_run_tests(prog, task, tests_wanted=[]):
+    # TODO: allow running from another dir, assuming this file is in correct dir
+    task_dir = os.path.join('.', task)
+    if not os.access(task_dir, os.R_OK | os.X_OK):
+        plus_one_zero = os.path.join('.', "0" + task)
+        plus_two_zeroes = os.path.join('.', "00" + task)
+        if os.access(plus_one_zero, os.R_OK | os.X_OK):
+            task = "0" + task
+            task_dir = plus_one_zero
+        elif os.access(plus_two_zeroes, os.R_OK | os.X_OK):
+            task = "00" + task
+            task_dir = plus_two_zeroes
+        else:
+            puke_and_quit("Bad task number " + task, 'USAGE')
+
+    tests_found = find_tests_in_dir(task_dir)
+    if tests_wanted == []:
+        tests = tests_found
+    else:
+        # TODO: should allow specifying tests with their complete name
+        tests = []
+        tests_wanted_nums = dict(map(lambda t: (int(t), t), tests_wanted))
+        for test_found in tests_found:
+            test_found_num = int(test_found.split("_")[0])
+            if test_found_num in tests_wanted_nums:
+                tests.append(test_found)
+                del tests_wanted_nums[test_found_num]
+        for _, unfound_test_num in tests_wanted_nums.items():
+            print("Warning: Test not found: " + unfound_test_num, file=sys.stderr)
+    run_tests(prog, task, tests)
+
+def puke_and_quit(*args):
+    global found_errors
+    global possible_errors
+    for arg in args:
+        if arg not in found_errors:
+            found_errors.append(arg)
+    fancy_errors = map(lambda err: possible_errors[err] if err in possible_errors.keys() else err, found_errors)
+    fancy_errors_str = "\n".join(fancy_errors)
+    sys.exit(fancy_errors_str)
+
+def main(argv):
+    # TODO: probably should be some code here to change the CWD to the same dir as this file
+    arguments = argv[:]
+    filename = arguments.pop(0)
+    if filename != __file__ and "python" in filename and arguments[0] == __file__:
+        filename = arguments.pop(0)
+    if len(arguments) < 2:
+        puke_and_quit("USAGE")
+    solutionfile = arguments.pop(0)
+    # TODO: should validate that solutionfile actually is a file, and is executable, and shit
+    task_number = arguments.pop(0)
+    test_list = arguments
+    choose_task_and_run_tests(solutionfile, task_number, test_list)
+
+if __name__ == "__main__":
+    from sys import argv
+    main(argv)

@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import sys
+
+print("argv", sys.argv)
+
+my_fn, solution_fn, target_test, test_args = sys.argv
+
+
+# Oh crap I just realized that my whole plan for arguments is wrong, because half of them need to be
+# to diff.
+
+# Can I write a single hairy line of Bash that solves everything?
+
+
+# what about diff <( progname scale in ) <( cat out)

@@ -1,0 +1,1 @@
+Your program should work on Type P1 (ASCII black-and-white) PNM files.

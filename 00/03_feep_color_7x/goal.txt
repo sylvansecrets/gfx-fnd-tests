@@ -1,0 +1,1 @@
+Your program should work on Type P3 (ASCII color) PNM files.

@@ -1,0 +1,6 @@
+Scale an input PNM by an integer multiple, producing a PNM output.
+
+Your program should take 1-3 arguments:
+  * a positive integer, to be taken as the scale multiple
+  * a filename of an existing PNM file, the input.  If this is missing, use STDIN
+  * a filename for the PNM output.  If this is missing, use STDOUT.

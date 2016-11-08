@@ -1,0 +1,1 @@
+Your program should work on Type P2 (ASCII grayscale) PNM files.
