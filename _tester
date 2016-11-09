@@ -1,17 +1,56 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
+import os
+import subprocess
 import sys
+import tempfile
 
-print("argv", sys.argv)
+#print("argv", sys.argv)
 
-my_fn, solution_fn, target_test, test_args = sys.argv
+tester_fn, testee_fn, target_test = sys.argv[:3]
+arglines = sys.argv[3:]
 
+def diff_pnms(left_file, right_file):
+  #print(left_file, right_file)
+  def tokenize(pnm_file):
+    def decommentify(line):
+      return line.split("#")[0]
+    lines = pnm_file.readlines()
+    lines_no_comments = map(decommentify, lines)
+    tokens = "".join(lines_no_comments).split()
+    return tokens
+  return tokenize(left_file) == tokenize(right_file)
 
-# Oh crap I just realized that my whole plan for arguments is wrong, because half of them need to be
-# to diff.
+def run_argline(argline, tmp_fh, tmp_fn):
+  argline = argline.split()
+  # set up CWD
+  old_cwd = os.getcwd()
+  os.chdir(target_test)
+  # fix up argline using TMP
+  argline2 = [tmp_fn if word == 'TMP' else word for word in argline]
+  # fix up argline using PROG
+  argline3 = [testee_fn if word == 'PROG' else word for word in argline2]
+  # run it
+  subprocess.call(argline3)
+  # repair CWD
+  os.chdir(old_cwd)
 
-# Can I write a single hairy line of Bash that solves everything?
+def run_and_compare_arglines(arglines):
+  if len(arglines) <= 1:
+    return 0
+  tmpfiles = []
+  for argline in arglines:
+    tmp_fh, tmp_fn = tempfile.mkstemp()
+    #print("tempfile", tmp_fn)
+    tmpfiles.append((tmp_fh, tmp_fn))
+    run_argline(argline, tmp_fh, tmp_fn)
+  for outfile_fh, outfile_fn in tmpfiles[1:]:
+    if not diff_pnms(os.fdopen(tmpfiles[0][0]), os.fdopen(outfile_fh)):
+      return 1
+  return 0
 
+sys.exit(run_and_compare_arglines(arglines))
 
-# what about diff <( progname scale in ) <( cat out)
+# Last-ditch idea if necessary:    diff <( progname scale in ) <( cat out)

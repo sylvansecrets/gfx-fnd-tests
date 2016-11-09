@@ -1,1 +1,2 @@
-7 in.pnm out.pnm
+cp out.pnm TMP
+PROG 7 in.pnm TMP

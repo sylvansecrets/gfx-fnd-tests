@@ -57,8 +57,8 @@ def run_test(prog, task, test):
         return (tester_fn, task, test, None, " ".join(problems))
     else:
         with open(testargs_fn) as argsfile:
-            argsline = argsfile.readline().strip()
-        retval = subprocess.call([tester_fn, prog, os.path.join(".", task, test), argsline])
+            argslines = [line.strip() for line in argsfile.readlines()]
+        retval = subprocess.call([tester_fn, prog, os.path.join(".", task, test)] + argslines)
         return (tester_fn, task, test, retval, "")
 
 def run_tests(prog, task, tests):
