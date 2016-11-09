@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 
+CLEAN_UP_TMPFILES = True
+
 #print("argv", sys.argv)
 
 tester_fn, testee_fn, target_test = sys.argv[:3]
@@ -31,25 +33,26 @@ def run_argline(argline, tmp_fh, tmp_fn):
   # fix up argline using TMP
   argline2 = [tmp_fn if word == 'TMP' else word for word in argline]
   # fix up argline using PROG
-  argline3 = [testee_fn if word == 'PROG' else word for word in argline2]
+  argline3 = [os.path.join(old_cwd, testee_fn) if word == 'PROG' else word for word in argline2]
   # run it
   subprocess.call(argline3)
   # repair CWD
   os.chdir(old_cwd)
 
 def run_and_compare_arglines(arglines):
-  if len(arglines) <= 1:
-    return 0
   tmpfiles = []
   for argline in arglines:
     tmp_fh, tmp_fn = tempfile.mkstemp()
     #print("tempfile", tmp_fn)
     tmpfiles.append((tmp_fh, tmp_fn))
     run_argline(argline, tmp_fh, tmp_fn)
-  for outfile_fh, outfile_fn in tmpfiles[1:]:
-    if not diff_pnms(os.fdopen(tmpfiles[0][0]), os.fdopen(outfile_fh)):
-      return 1
-  return 0
+  correctnesses = [diff_pnms(os.fdopen(tmpfiles[0][0]), os.fdopen(outfile_fh)) 
+          for outfile_fh, outfile_fn in tmpfiles[1:]]
+  if CLEAN_UP_TMPFILES:
+      for tmpfile in tmpfiles:
+          os.remove(tmpfile[1])
+  #print(correctnesses)
+  return len(correctnesses) - sum(correctnesses, 0)  # exit value is the number of mismatches
 
 sys.exit(run_and_compare_arglines(arglines))
 
