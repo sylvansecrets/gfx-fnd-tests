@@ -16,6 +16,15 @@ possible_errors = {
 
 found_errors = []
 
+def canonicalize_exec(cmd):
+    '''Thank you http://stackoverflow.com/a/377028/1695680'''
+    if os.access(os.path.join(os.getcwd(), cmd), os.R_OK | os.X_OK):
+        return os.path.join(os.getcwd(), cmd)
+    if any( os.access(os.path.join(path, cmd), os.X_OK) for path in
+            os.environ["PATH"].split(os.pathsep)):
+        return cmd
+    return False
+
 def display_results(task, results):
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
@@ -55,8 +64,6 @@ def run_test(prog, task, test):
     problems = []
     if tester_fn is None: problems.append("No valid tester found.")
     if testargs_fn is None: problems.append("No valid arguments-configuration found.")
-    if not os.access(prog, os.R_OK | os.X_OK):
-        problems.append("Testee < " + prog + " > not found or not executable")
     if len(problems) > 0:
         return (tester_fn, task, test, None, " ; ".join(problems))
     else:
@@ -131,11 +138,13 @@ def main(argv):
         filename = arguments.pop(0)
     if len(arguments) < 2:
         puke_and_quit("USAGE")
-    solutionfile = arguments.pop(0)
-    # TODO: should validate that solutionfile actually is a file, and is executable, and shit
+    solution_filename = arguments.pop(0)
+    prog = canonicalize_exec(solution_filename)
+    if not prog:
+        puke_and_quit("Testee < " + prog + " > not found or not executable")
     task_number = arguments.pop(0)
     test_list = arguments
-    choose_task_and_run_tests(solutionfile, task_number, test_list)
+    choose_task_and_run_tests(prog, task_number, test_list)
 
 if __name__ == "__main__":
     from sys import argv
