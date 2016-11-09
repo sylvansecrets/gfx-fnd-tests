@@ -1,0 +1,12 @@
+Make a native-style PNM-viewing application
+
+Figure out some plan to view PNMs in a native-style app on your platform.  The point here is not to
+produce a viewer (existing viewers do fine, thank you).  The point is to start making progress on a
+path that eventually leads to an interactive application that can display images almost as fast as
+it can generate them, so that when your 3D engine is finished, you can interactively look at scenes
+in it.  Of course, at that point it won't read PNMs, but rather you'll write directly to the
+screen-drawing API that you develop, rather than writing to a PNM intermediary.
+
+I haven't even *started* looking at how to do this on any platform, so I'm hoping students will
+solve this one for me.  Obviously the difficulty level will depend on a variety of things, like
+programming language, willingness to include dependencies, and performance goals.

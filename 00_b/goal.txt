@@ -1,0 +1,11 @@
+Convert a "plain" PNM to a "packed" PNM.
+
+Your program should take exactly 2 arguments:
+  * input filename of plain PNM
+  * output filename of packed PNM
+
+Note that the point of this exercise is to begin to cultivate a little experience in bit-packing and
+other binary format manipulation.
+
+If this doesn't seem like enough of a stretch, feel free to try saving GIFs or JPEGs or PNGs or
+something else, and I look forward to seeing you when you get back from that.

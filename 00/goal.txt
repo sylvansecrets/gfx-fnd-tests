@@ -4,3 +4,8 @@ Your program should take 1-3 arguments:
   * a positive integer, to be taken as the scale multiple
   * a filename of an existing PNM file, the input.  If this is missing, use STDIN
   * a filename for the PNM output.  If this is missing, use STDOUT.
+
+The tests only given input in "plain" (ASCII-mode, not binary-packed-mode) PNM files, and test the
+output under the same assumption.
+
+The tests do not currently test the STDIN/STDOUT features.

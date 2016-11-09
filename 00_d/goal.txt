@@ -1,0 +1,13 @@
+Make a Javascript tool to read PNMs from a textarea and display them somehow.
+
+Ideally it should also allow a scaling factor, because it'll make it a lot easier to audit your own
+work on the early assignments.
+
+Personally I think it'd be pretty funny to use a <table> of 1x1 pixel <div> elements, and give each
+one a background color.  YMMV.  Obviously if you care about performance, there's this silly thing
+called <canvas>
+
+As with 00_c, the "PNM-viewer" goal is only a means to an end; eventually I hope that we can port
+our 3d engines to the browser, because it's an interactive environment that all of us (are supposed
+to) know.
+
