@@ -15,45 +15,46 @@ tester_fn, testee_fn, target_test = sys.argv[:3]
 arglines = sys.argv[3:]
 
 def diff_pnms(left_file, right_file):
-  #print(left_file, right_file)
-  def tokenize(pnm_file):
-    def decommentify(line):
-      return line.split("#")[0]
-    lines = pnm_file.readlines()
-    lines_no_comments = map(decommentify, lines)
-    tokens = "".join(lines_no_comments).split()
-    return tokens
-  return tokenize(left_file) == tokenize(right_file)
+    #print(left_file, right_file)
+    def tokenize(pnm_file):
+        def decommentify(line):
+            return line.split("#")[0]
+        lines = pnm_file.readlines()
+        lines_no_comments = map(decommentify, lines)
+        tokens = "".join(lines_no_comments).split()
+        return tokens
+    return tokenize(left_file) == tokenize(right_file)
 
 def run_argline(argline, tmp_fh, tmp_fn):
-  argline = argline.split()
-  # set up CWD
-  old_cwd = os.getcwd()
-  os.chdir(target_test)
-  # fix up argline using TMP
-  argline2 = [tmp_fn if word == 'TMP' else word for word in argline]
-  # fix up argline using PROG
-  argline3 = [os.path.join(old_cwd, testee_fn) if word == 'PROG' else word for word in argline2]
-  # run it
-  subprocess.call(argline3)
-  # repair CWD
-  os.chdir(old_cwd)
+    # TODO: respect PROG whether it's on-the-PATH or it's relative-path
+    argline = argline.split()
+    # set up CWD
+    old_cwd = os.getcwd()
+    os.chdir(target_test)
+    # fix up argline using TMP
+    argline2 = [tmp_fn if word == 'TMP' else word for word in argline]
+    # fix up argline using PROG
+    argline3 = [os.path.join(old_cwd, testee_fn) if word == 'PROG' else word for word in argline2]
+    # run it
+    subprocess.call(argline3)
+    # repair CWD
+    os.chdir(old_cwd)
 
 def run_and_compare_arglines(arglines):
-  tmpfiles = []
-  for argline in arglines:
-    tmp_fh, tmp_fn = tempfile.mkstemp()
-    #print("tempfile", tmp_fn)
-    tmpfiles.append((tmp_fh, tmp_fn))
-    run_argline(argline, tmp_fh, tmp_fn)
-  correctnesses = [diff_pnms(os.fdopen(tmpfiles[0][0]), os.fdopen(outfile_fh)) 
-          for outfile_fh, outfile_fn in tmpfiles[1:]]
-  if CLEAN_UP_TMPFILES:
-      for tmpfile in tmpfiles:
-          os.remove(tmpfile[1])
-  #print(correctnesses)
-  return len(correctnesses) - sum(correctnesses, 0)  # exit value is the number of mismatches
+    tmpfiles = []
+    for argline in arglines:
+        tmp_fh, tmp_fn = tempfile.mkstemp()
+        #print("tempfile", tmp_fn)
+        tmpfiles.append((tmp_fh, tmp_fn))
+        run_argline(argline, tmp_fh, tmp_fn)
+    correctnesses = [diff_pnms(os.fdopen(tmpfiles[0][0]), os.fdopen(outfile_fh)) 
+                    for outfile_fh, outfile_fn in tmpfiles[1:]]
+    if CLEAN_UP_TMPFILES:
+            for tmpfile in tmpfiles:
+                    os.remove(tmpfile[1])
+    #print(correctnesses)
+    return len(correctnesses) - sum(correctnesses, 0)    # exit value is the number of mismatches
 
 sys.exit(run_and_compare_arglines(arglines))
 
-# Last-ditch idea if necessary:    diff <( progname scale in ) <( cat out)
+# Last-ditch idea if necessary:        diff <( progname scale in ) <( cat out)
