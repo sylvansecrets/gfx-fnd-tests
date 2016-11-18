@@ -4,19 +4,26 @@ Your program should take two arguments: the first is an input .json file, the se
 
 The input file will contain one JSON object, roughly like this:
 
+
+{
+  "walls": [
     {
-      walls: [
-        { x0: -1, y0: 1, x1: 3, y1: 5 },
-        { x0: 3, y0: -2, x1: 3, y1: 2 },
-      ],
-      camera_x: 0.5
-      camera_y: 1.0,
-      angles: [
-        0,
-        1.5708,
-        4,
-      ],
+      "x0": -1,
+      "y0": 1,
+      "x1": 3,
+      "y1": 5
+    },
+    {
+      "x0": 3,
+      "y0": -2,
+      "x1": 3,
+      "y1": 2
     }
+  ],
+  "camera_x": 0.5,
+  "camera_y": 1,
+  "angles": [0, 1.5708, 4]
+}
 
 Note that angles are measured in radians, and the angle system is one used by math nerds, not the
 more common clock-face system..  If you stand at 0,0, and your angle is 0 radians, you are looking
@@ -28,7 +35,7 @@ You should write an output file, containing one JSON object, roughly like this:
     {
       collisions: [
         { wall: 1, distance: 2.5 },
-        { wall: 0, distance: 1.499 },
+        { wall: undefined, distance: undefined },
         { wall: undefined, distance: Infinity },
       ]
     }
